@@ -1,0 +1,11 @@
+Flask==3.0.3
+tensorflow==2.16.1
+keras==3.3.3
+xgboost==2.1.4
+scikit-learn==1.4.2
+scikit-image
+opencv-python-headless
+joblib==1.4.2
+pandas==2.2.2
+Pillow
+numpy==1.26.4

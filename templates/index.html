@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melanoma Classification</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <h1>Melanoma Classification</h1>
+        <p class="subtitle">Upload a skin lesion image to begin analysis.</p>
+        
+        <div class="upload-section">
+            <input type="file" id="image-upload-input" accept="image/*" hidden>
+            
+            <button id="upload-button" class="button-primary">Upload Image</button>
+            <span id="file-name">No file selected</span>
+            <button id="analyze-button" class="button-secondary" disabled>Analyze</button>
+        </div>
+
+        <div id="spinner" class="spinner" style="display: none;"></div>
+        
+        <div class="results-grid" id="results-grid" style="display: none;">
+            <div class="result-card">
+                <h3>Original Image</h3>
+                <img id="original-image" src="#" alt="Uploaded Image">
+            </div>
+            <div class="result-card">
+                <h3>U-Net Generated Mask</h3>
+                <img id="mask-image" src="#" alt="Segmentation Mask">
+            </div>
+            <div class="result-card full-width">
+                <h3>Analysis Results</h3>
+                <div class="analysis-text">
+                    <div class="prediction-box">
+                        <h4>Prediction</h4>
+                        <pre id="prediction-result"></pre>
+                    </div>
+                    <div class="features-box">
+                        <h4>Key Feature Values (ABCD)</h4>
+                        <pre id="features-display"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadButton = document.getElementById('upload-button');
+    const imageUploadInput = document.getElementById('image-upload-input');
+    const analyzeButton = document.getElementById('analyze-button');
+    const fileNameDisplay = document.getElementById('file-name');
+    const spinner = document.getElementById('spinner');
+    const resultsGrid = document.getElementById('results-grid');
+    const originalImage = document.getElementById('original-image');
+    const maskImage = document.getElementById('mask-image');
+    const predictionResult = document.getElementById('prediction-result');
+    const featuresDisplay = document.getElementById('features-display');
+    let uploadedFile;
+
+    // When "Upload Image" is clicked, trigger the hidden file input
+    uploadButton.addEventListener('click', () => imageUploadInput.click());
+
+    // When a file is selected
+    imageUploadInput.addEventListener('change', (e) => {
+        uploadedFile = e.target.files[0];
+        if (uploadedFile) {
+            fileNameDisplay.textContent = uploadedFile.name;
+            let reader = new FileReader();
+            reader.onload = (event) => {
+                originalImage.src = event.target.result;
+                resultsGrid.style.display = 'grid'; // Show the grid
+                maskImage.style.display = 'none'; // Hide the old mask
+                predictionResult.textContent = 'Ready for analysis...';
+                featuresDisplay.textContent = 'Ready for analysis...';
+            };
+            reader.readAsDataURL(uploadedFile);
+            analyzeButton.disabled = false; // Enable the Analyze button
+        }
+    });
+
+    // When "Analyze" is clicked
+    analyzeButton.addEventListener('click', () => {
+        if (!uploadedFile) {
+            alert("Please upload an image first.");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('file', uploadedFile);
+        
+        spinner.style.display = 'block';
+        analyzeButton.disabled = true;
+        analyzeButton.textContent = 'Analyzing...';
+        uploadButton.disabled = true;
+
+        fetch('/predict', { method: 'POST', body: formData })
+        .then(response => response.json())
+        .then(data => {
+            spinner.style.display = 'none';
+            analyzeButton.disabled = false;
+            analyzeButton.textContent = 'Analyze';
+            uploadButton.disabled = false;
+
+            if (data.error) {
+                predictionResult.textContent = 'Error: ' + data.error;
+                featuresDisplay.textContent = 'N/A';
+                maskImage.style.display = 'none';
+            } else {
+                predictionResult.textContent = data.prediction;
+                featuresDisplay.textContent = data.features;
+                maskImage.src = 'data:image/png;base64,' + data.mask;
+                maskImage.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            spinner.style.display = 'none';
+            analyzeButton.disabled = false;
+            analyzeButton.textContent = 'Analyze';
+            uploadButton.disabled = false;
+            predictionResult.textContent = 'Fatal Error: Could not connect to the server.';
+            console.error('Error:', error);
+        });
+    });
+});
+</script>
+</body>
+</html>
