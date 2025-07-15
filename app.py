@@ -1,5 +1,3 @@
-# app.py
-
 import os
 import cv2
 import numpy as np
@@ -19,7 +17,6 @@ warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
 
-# --- Load All Models and Components ONCE on Startup ---
 print("--- Loading all trained models and components... ---")
 try:
     UNET_MODEL_PATH = os.path.join("models", "Unet_model_final.h5")
@@ -39,7 +36,6 @@ except Exception as e:
     print(f"CRITICAL ERROR ON STARTUP: Could not load models. {e}")
     print(traceback.format_exc())
 
-# --- Define Processing Functions from your Colab Notebook ---
 def remove_hair(image):
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY); kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (17, 17))
     blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel); _, thresh = cv2.threshold(blackhat, 10, 255, cv2.THRESH_BINARY)
@@ -48,7 +44,6 @@ def remove_hair(image):
 def extract_enhanced_features(image_rgb, pred_mask_prob):
     try:
         features = {}
-        # Using the 0.3 threshold from your working Colab script
         mask_binary = (pred_mask_prob > 0.3).astype(np.uint8)
         props_list = measure.regionprops(mask_binary)
         if not props_list: return None, None
@@ -69,7 +64,6 @@ def extract_enhanced_features(image_rgb, pred_mask_prob):
     except Exception:
         return None, None
 
-# --- Main Prediction Pipeline ---
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
