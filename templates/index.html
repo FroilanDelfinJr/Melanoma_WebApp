@@ -60,10 +60,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const featuresDisplay = document.getElementById('features-display');
     let uploadedFile;
 
-    // When "Upload Image" is clicked, trigger the hidden file input
     uploadButton.addEventListener('click', () => imageUploadInput.click());
 
-    // When a file is selected
     imageUploadInput.addEventListener('change', (e) => {
         uploadedFile = e.target.files[0];
         if (uploadedFile) {
@@ -71,17 +69,16 @@ document.addEventListener('DOMContentLoaded', function() {
             let reader = new FileReader();
             reader.onload = (event) => {
                 originalImage.src = event.target.result;
-                resultsGrid.style.display = 'grid'; // Show the grid
-                maskImage.style.display = 'none'; // Hide the old mask
+                resultsGrid.style.display = 'grid';
+                maskImage.style.display = 'none';
                 predictionResult.textContent = 'Ready for analysis...';
                 featuresDisplay.textContent = 'Ready for analysis...';
             };
             reader.readAsDataURL(uploadedFile);
-            analyzeButton.disabled = false; // Enable the Analyze button
+            analyzeButton.disabled = false;
         }
     });
 
-    // When "Analyze" is clicked
     analyzeButton.addEventListener('click', () => {
         if (!uploadedFile) {
             alert("Please upload an image first.");
